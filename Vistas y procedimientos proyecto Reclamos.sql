@@ -57,17 +57,10 @@ dbo.cobertura AS t4 ON t4.cobertura = t3.cober AND t2.ramo = t4.ramo
 ----- query para busqueda de las polizas medicas------------------------
 
 
-select *from ramos where ramo in (7,9,123)
-select *from poliza where ramo in (7,9,123)
-select *from asegurado where (ramo in (7,9,123))
-
---1699 FILAS
-
 create view vistaReclamosMedicos
 as
-SELECT t0.poliza, t0.ramo, t0.vigi, t0.vigf, t0.cliente, t0.status, t1.nombre, t1.apellido, t1.tipo, t1.direccion
-from poliza as t0 INNER JOIN clientes as t1 on t1.cliente = t0.cliente 
-WHERE (t0.ramo IN (7,9,123)) AND (t0.vigf > GETDATE()) AND (UPPER(t0.status) <> 'CANCELADA') AND (UPPER(t0.status) <> 'SOLICITUD') AND (UPPER(t0.tipo) = 'POLIZA')
-
+select distinct t0.ramo, t1.maxren, t0.poliza, t0.tipo, t0.clase, t0.parentesco, t0.asegurado  from asegurado as t0 INNER JOIN 
+( select max(secren) maxren, poliza
+ from poliza where ramo in (7,9,123) and tipo ='poliza'  and status <> 'cancelada' and vigf > getdate()  group by poliza) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
 
 
