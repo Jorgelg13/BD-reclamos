@@ -59,7 +59,7 @@ dbo.cobertura AS t4 ON t4.cobertura = t3.cober AND t2.ramo = t4.ramo
 
 create view vistaReclamosMedicos
 as
-select distinct t0.ramo, t1.maxren, t0.poliza, t0.tipo, t0.clase, t0.parentesco, t0.asegurado  from asegurado as t0 INNER JOIN 
+select distinct t0.ramo, t0.poliza, t0.tipo, t0.clase, t0.parentesco, t0.asegurado  from asegurado as t0 INNER JOIN 
 ( select max(secren) maxren, poliza
  from poliza where ramo in (7,9,123) and tipo ='poliza'  and status <> 'cancelada' and vigf > getdate()  group by poliza) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
 
