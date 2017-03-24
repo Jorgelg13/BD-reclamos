@@ -4,9 +4,15 @@
 
  CREATE VIEW ViewBusquedaAuto
  AS 
- SELECT [ramo], t0.[poliza], [vigi], [vigf], [marca], [color], [motor], [chasis], [placa], [solicitud], [secart], [modelo], [valorauto], [propietario], [estado] 
- FROM [autos] t0 inner join ( select max(secren) maxren, poliza
- from poliza where tipo ='poliza'  and status <> 'cancelada' group by poliza) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
+ --SELECT [ramo], t0.[poliza], [vigi], [vigf], [marca], [color], [motor], [chasis], [placa], [solicitud], [secart], [modelo], [valorauto], [propietario], [estado] 
+ --FROM [autos] t0 inner join ( select max(secren) maxren, poliza
+ --from poliza where tipo ='poliza'  and status <> 'cancelada' group by poliza) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
+
+ SELECT [ramo], t0.[poliza], t1.vigi, t1.vigf, t3.nombre, [color], t2.gst_nombre, [motor], [chasis], [placa], [solicitud], [secart], [modelo], [valorauto], [propietario], t0.estado 
+ FROM [autos] t0 inner join ( select max(secren) maxren, poliza, gestor,cia,vigi, vigf
+ from poliza where tipo ='poliza' and vigf> GETDATE() and status <> 'cancelada' group by poliza,gestor,cia,vigi, vigf) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
+ inner join gestores as t2 on t1.gestor = t2.gst_codigo_gestor
+ inner join ciaseg as t3 on t1.cia = t3.cia
  
  --luego para la busqueda de las coberturas del automovil especifico
  --creo un procedimiento almacenado con la siguiente estructura
@@ -64,3 +70,14 @@ select distinct t0.ramo, t0.poliza, t0.tipo, t0.clase, t0.parentesco, t0.asegura
  from poliza where ramo in (7,9,123) and tipo ='poliza'  and status <> 'cancelada' and vigf > getdate()  group by poliza) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
 
 
+
+
+ ---------------------------------------
+ --- tablas para enlasar informacion en autos
+ select *from seg_modelos
+
+select *from seg_marcas
+
+select *from ciaseg
+
+select *from gestores
