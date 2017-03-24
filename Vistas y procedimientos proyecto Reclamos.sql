@@ -41,9 +41,14 @@
 
 create view vistaReclamosDaños
 as
-SELECT t0.poliza, t0.ramo, t0.vigi, t0.vigf, t0.cliente, t0.status, t1.nombre, t1.apellido, t1.tipo, t1.direccion
+
+SELECT t0.poliza, t0.ramo, t0.vigi,t0.vigf, t2.gst_nombre, t3.nombre, t0.cliente, t0.status, t1.nombre, t1.apellido, t1.tipo, t1.direccion
 FROM  dbo.poliza AS t0 INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente
-WHERE (t0.ramo NOT IN (2, 123, 7, 9)) AND (t0.vigf > GETDATE()) AND (UPPER(t0.status) <> 'CANCELADA') AND (UPPER(t0.status) <> 'SOLICITUD') AND (UPPER(t0.tipo) = 'POLIZA')
+inner join gestores as t2 on t0.gestor = t2.gst_codigo_gestor
+inner join ciaseg as t3 on t0.cia = t3.cia 
+WHERE (t0.ramo NOT IN (2, 123, 7, 9)) AND (t0.vigf > GETDATE()) AND (UPPER(t0.status) <> 'CANCELADA') AND (UPPER(t0.status) <> 'SOLICITUD') AND (UPPER(t0.tipo) = 'POLIZA') order by poliza
+
+
 
 
 --luego creo una vista para la busqueda de las coberturas de los reclamos de daños varios
