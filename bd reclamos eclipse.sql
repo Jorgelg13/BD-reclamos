@@ -1,5 +1,8 @@
+
 /* Drop Tables */
 
+IF ObJECt_ID('[bitacora_autorizaciones]') IS NOT NULL DROP TABLE [bitacora_autorizaciones];
+IF ObJECt_ID('[autorizaciones]') IS NOT NULL DROP TABLE [autorizaciones];
 IF ObJECt_ID('[bitacora_reclamo_auto]') IS NOT NULL DROP TABLE [bitacora_reclamo_auto];
 IF ObJECt_ID('[reclamo_auto]') IS NOT NULL DROP TABLE [reclamo_auto];
 IF ObJECt_ID('[auto_reclamo]') IS NOT NULL DROP TABLE [auto_reclamo];
@@ -21,6 +24,22 @@ IF ObJECt_ID('[reg_reclamo_varios]') IS NOT NULL DROP TABLE [reg_reclamo_varios]
 
 /* Create Tables */
 
+CREATE TABLE [autorizaciones]
+(
+	[id] int NOT NULL IDENTITY ,
+	[reportante] nvarchar(100),
+	[tipo_consulta] nvarchar(75),
+	[correo] nvarchar(100),
+	[telefono] nvarchar(30),
+	[hora_commit] time(0),
+	[fecha_commit] date,
+	[id_usuario] int NOT NULL,
+	[id_cabina] int NOT NULL,
+	[id_reg_reclamos_medicos] int NOT NULL,
+	PRIMARY KEY ([id])
+);
+
+
 CREATE TABLE [auto_reclamo]
 (
 	[id] int NOT NULL IDENTITY ,
@@ -30,7 +49,21 @@ CREATE TABLE [auto_reclamo]
 	[motor] nvarchar(50),
 	[propietario] varchar(50),
 	[marca] varchar(50),
-	[poliza] varchar(50),
+	[poliza] nvarchar(50),
+	[ejecutivo] nvarchar(100),
+	[aseguradora] nvarchar(100),
+	PRIMARY KEY ([id])
+);
+
+
+CREATE TABLE [bitacora_autorizaciones]
+(
+	[id] int NOT NULL IDENTITY ,
+	[descripcion] nvarchar(300),
+	[estado] nvarchar(50),
+	[hora_commit] time(0),
+	[fecha_commit] date,
+	[id_autorizaciones] int NOT NULL,
 	PRIMARY KEY ([id])
 );
 
@@ -39,7 +72,7 @@ CREATE TABLE [bitacora_reclamos_medicos]
 (
 	[id] int NOT NULL IDENTITY ,
 	[descripcion] nvarchar(400),
-	[hora_commit] time,
+	[hora_commit] time(0),
 	[fecha_commit] date,
 	[id_reclamos_medicos] int NOT NULL,
 	PRIMARY KEY ([id])
@@ -50,8 +83,8 @@ CREATE TABLE [bitacora_reclamos_varios]
 (
 	[id] int NOT NULL IDENTITY ,
 	[descripcion] varchar(400),
-	[hora] time,
-	[fecha] date,
+	[hora_commit] time(0),
+	[fecha_commit] date,
 	[id_reclamos_varios] int NOT NULL,
 	PRIMARY KEY ([id])
 );
@@ -61,8 +94,8 @@ CREATE TABLE [bitacora_reclamo_auto]
 (
 	[id] int NOT NULL IDENTITY ,
 	[descripcion] nvarchar(400) NOT NULL,
-	[fecha] date,
-	[hora] time,
+	[fecha_commit] date,
+	[hora_commit] time(0),
 	[id_reclamo] int NOT NULL,
 	PRIMARY KEY ([id])
 );
@@ -112,10 +145,13 @@ CREATE TABLE [reclamos_medicos]
 	[tipo_consulta] nvarchar(50),
 	[correo] nvarchar(50),
 	[telefono] nvarchar(50),
+	[metodo] nvarchar(20),
 	[id_estado] int NOT NULL,
 	[id_usuario] int NOT NULL,
 	[id_cabina] int NOT NULL,
 	[id_reg_reclamos_medicos] int NOT NULL,
+	[hora_commit] time(0),
+	[fecha_commit] date,
 	PRIMARY KEY ([id])
 );
 
@@ -125,19 +161,20 @@ CREATE TABLE [reclamos_varios]
 	[id] int NOT NULL IDENTITY ,
 	[boleta] varchar(50),
 	[titular] varchar(50),
-	[ubicacion] varchar(70),
+	[ubicacion] varchar(200),
 	[hora] time,
 	[fecha] date,
 	[reportante] varchar(60) NOT NULL,
 	[telefono] varchar(30) NOT NULL,
 	[ajustador] varchar(50),
 	[version] varchar(300),
+	[metodo] nvarchar(20),
 	[id_estado] int NOT NULL,
 	[id_usuario] int NOT NULL,
 	[id_reg_reclamos_varios] int NOT NULL,
 	[id_cabina] int NOT NULL,
+	[hora_commit] time(0) NOT NULL,
 	[fecha_commit] date NOT NULL,
-	[hora_commit] time NOT NULL,
 	PRIMARY KEY ([id])
 );
 
@@ -147,18 +184,21 @@ CREATE TABLE [reclamo_auto]
 	[id] int NOT NULL IDENTITY ,
 	[boleta] varchar(50),
 	[titular] varchar(70),
-	[ubicacion] varchar(50),
+	[ubicacion] varchar(300),
 	[hora] time,
 	[fecha] date,
 	[reportante] varchar(50),
 	[piloto] varchar(50),
 	[telefono] varchar(20),
 	[ajustador] varchar(50),
-	[version] varchar(300),
+	[version] varchar(500),
+	[metodo] nvarchar(20),
 	[id_auto_reclamo] int NOT NULL,
 	[id_estado] int NOT NULL,
 	[id_cabina] int NOT NULL,
 	[id_usuario] int NOT NULL,
+	[hora_commit] time(0),
+	[fecha_commit] date,
 	PRIMARY KEY ([id])
 );
 
@@ -172,6 +212,8 @@ CREATE TABLE [reg_reclamos_medicos]
 	[tipo] nvarchar(5),
 	[clase] nvarchar(5),
 	[parentesco] nvarchar(10),
+	[ejecutivo] nvarchar(100),
+	[aseguradora] nvarchar(100),
 	PRIMARY KEY ([id])
 );
 
@@ -186,7 +228,9 @@ CREATE TABLE [reg_reclamo_varios]
 	[status] varchar(20),
 	[tipo] varchar(20),
 	[direccion] varchar(50),
-	[ramo] varchar(50),
+	[ramo] nvarchar(10),
+	[ejecutivo] nvarchar(100),
+	[aseguradora] nvarchar(100),
 	PRIMARY KEY ([id])
 );
 
@@ -213,9 +257,24 @@ CREATE TABLE [usuario]
 
 /* Create Foreign Keys */
 
+ALTER TABLE [bitacora_autorizaciones]
+	ADD FOREIGN KEY ([id_autorizaciones])
+	REFERENCES [autorizaciones] ([id])
+	ON UPDATE RESTRICT
+	ON DELETE RESTRICT
+;
+
+
 ALTER TABLE [reclamo_auto]
 	ADD FOREIGN KEY ([id_auto_reclamo])
 	REFERENCES [auto_reclamo] ([id])
+
+;
+
+
+ALTER TABLE [autorizaciones]
+	ADD FOREIGN KEY ([id_cabina])
+	REFERENCES [cabina] ([id])
 
 ;
 
@@ -258,7 +317,7 @@ ALTER TABLE [sucursal]
 ALTER TABLE [reclamos_medicos]
 	ADD FOREIGN KEY ([id_estado])
 	REFERENCES [estado] ([id])
-	
+
 ;
 
 
@@ -304,6 +363,13 @@ ALTER TABLE [bitacora_reclamo_auto]
 ;
 
 
+ALTER TABLE [autorizaciones]
+	ADD FOREIGN KEY ([id_reg_reclamos_medicos])
+	REFERENCES [reg_reclamos_medicos] ([id])
+
+;
+
+
 ALTER TABLE [reclamos_medicos]
 	ADD FOREIGN KEY ([id_reg_reclamos_medicos])
 	REFERENCES [reg_reclamos_medicos] ([id])
@@ -321,13 +387,21 @@ ALTER TABLE [reclamos_varios]
 ALTER TABLE [cabina]
 	ADD FOREIGN KEY ([id_sucursal])
 	REFERENCES [sucursal] ([id])
-	
+
+;
+
+
+ALTER TABLE [autorizaciones]
+	ADD FOREIGN KEY ([id_usuario])
+	REFERENCES [usuario] ([id])
+
+;
 
 
 ALTER TABLE [reclamos_medicos]
 	ADD FOREIGN KEY ([id_usuario])
 	REFERENCES [usuario] ([id])
-	
+
 ;
 
 
@@ -343,6 +417,4 @@ ALTER TABLE [reclamo_auto]
 	REFERENCES [usuario] ([id])
 
 ;
-
-
 
