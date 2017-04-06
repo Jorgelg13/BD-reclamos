@@ -4,10 +4,7 @@
 
  CREATE VIEW ViewBusquedaAuto
  AS 
- --SELECT [ramo], t0.[poliza], [vigi], [vigf], [marca], [color], [motor], [chasis], [placa], [solicitud], [secart], [modelo], [valorauto], [propietario], [estado] 
- --FROM [autos] t0 inner join ( select max(secren) maxren, poliza
- --from poliza where tipo ='poliza'  and status <> 'cancelada' group by poliza) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
-
+ insert into [reclamos].[dbo].[ViewBusquedaAuto]
  SELECT [ramo], t0.[poliza], t1.vigi, t1.vigf, t3.nombre, [color], t2.gst_nombre, t1.contratante, [motor], [chasis], t0.marca, [placa], [solicitud], [secart], [modelo], [valorauto], [propietario], t0.estado 
  FROM [autos] t0 inner join ( select max(secren) maxren, poliza, gestor,cia,vigi, vigf, contratante
  from poliza where tipo ='poliza' and vigf> GETDATE() and status <> 'cancelada' group by poliza,gestor,cia,vigi, vigf,contratante) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
@@ -33,8 +30,6 @@
 
 
 
-
-
 ---------------------------------------------------------------------------------------------------------------
 -- para la busqueda de los reclamos para daños varios creo una vista con la siguiente estructura
 -- donde viene todas las polizas de esos ramos vigentes
@@ -42,19 +37,21 @@
 create view vistaReclamosDaños
 as
 
+insert into [reclamos].[dbo].[vistaReclamosDaños]
 SELECT t0.poliza, t0.ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre,t0.contratante, t0.cliente, t0.status, t1.apellido, t1.tipo, t1.direccion, t1.nombre AS NombreCliente
 FROM dbo.poliza AS t0 INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente INNER JOIN
 dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
 INNER JOIN dbo.ciaseg AS t3 ON t0.cia = t3.cia
 WHERE (t0.ramo NOT IN (2, 123, 7, 9)) AND (t0.vigf > GETDATE()) AND (UPPER(t0.status) <> 'CANCELADA') AND (UPPER(t0.status) <> 'SOLICITUD') AND (UPPER(t0.tipo) = 'POLIZA')
 
---luego creo una vista para la busqueda de las coberturas de los reclamos de daños varios
---
 
+
+
+--luego creo una vista para la busqueda de las coberturas de los reclamos de daños varios
 
 create view busqCoberturasPolizasDaños
 as
-SELECT t4.descr, t0.poliza, t1.m, t3.secart
+SELECT DISTINCT t4.descr, t0.poliza, t1.m, t3.secart
 FROM  dbo.poliza AS t0 INNER JOIN
 (SELECT MAX(secren) AS m, poliza FROM dbo.poliza
 GROUP BY poliza) AS t1 ON t0.poliza = t1.poliza AND t0.secren = t1.m AND t0.tipo = 'poliza' AND t0.status NOT IN ('cancelada', 'solicitud') AND t0.ramo NOT IN (7, 9, 123, 2) AND t0.vigf > GETDATE() INNER JOIN
@@ -69,21 +66,23 @@ dbo.cobertura AS t4 ON t4.cobertura = t3.cober AND t2.ramo = t4.ramo
 
 create view vistaReclamosMedicos
 as
---select distinct t0.ramo, t0.poliza, t0.tipo, t0.clase, t0.parentesco, t0.asegurado  from asegurado as t0 INNER JOIN 
---( select max(secren) maxren, poliza
--- from poliza where ramo in (7,9,123) and tipo ='poliza'  and status <> 'cancelada' and vigf > getdate()  group by poliza) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren order by asegurado
+delete from [reclamos].[dbo].[vistaReclamosMedicos]
+insert into [reclamos].[dbo].[vistaReclamosMedicos]
 
- select distinct t0.ramo, t0.poliza, t0.tipo, t0.clase,t0.asegurado, t2.nombre, t3.gst_nombre,t1.contratante, t1.vigi, t1.vigf from asegurado as t0 INNER JOIN 
-( select max(secren) maxren, poliza, cia, gestor, vigi, vigf, contratante
- from poliza where ramo in (7,9,123) and tipo ='poliza'  and status <> 'cancelada' and vigf > getdate()  group by poliza,cia,gestor,vigi, vigf, contratante) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
+ select  t0.ramo, t0.poliza, t0.tipo, t0.clase,t0.asegurado, t2.nombre, t3.gst_nombre,t4.nombre as contratante, t1.vigi, t1.vigf from asegurado as t0 INNER JOIN 
+( select max(secren) maxren, poliza, cia, gestor, vigi, vigf, cliente
+ from poliza where ramo in (7,9,123) and tipo ='poliza'  and status <> 'cancelada' and vigf > getdate()  group by poliza,cia,gestor,vigi, vigf, cliente) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
  inner join ciaseg as t2 on t1.cia = t2.cia
  inner join gestores as t3 on t1.gestor = t3.gst_codigo_gestor 
+ inner join clientes as t4 on t1.cliente = t4.cliente
 
 
-
-
-
-
+ select *from poliza where ramo in(7,9,123)
+ select *from asegurado
+ select *from poliza where poliza = 'SC-997'
+ select poliza, cliente, cia, ramo, tipo, contratante from poliza where ramo in(7,9,123)
+ select *from clientes where tipo ='jur' ORDER BY nombre 
+ select *from clientes where tipo = 'jur' 
 ----------------------------------------------------------------
 -------------procedimientos almacenados para reportes -------------------
 create procedure pa_ReportesAutos
