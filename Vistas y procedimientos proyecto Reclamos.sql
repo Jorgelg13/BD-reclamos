@@ -5,9 +5,9 @@
  CREATE VIEW ViewBusquedaAuto
  AS 
  insert into [reclamos].[dbo].[ViewBusquedaAuto]
- SELECT  [ramo], t0.[poliza], t1.vigi, t1.vigf, t3.nombre, t6.cat_descr_catalogo as color, t2.gst_nombre, t4.nombre as contratante, [motor], [chasis], t5.descr_marca as marca, [placa], [solicitud], [secart], Year(aaauto) as modelo, [valorauto], [propietario], t1.status
- FROM [autos] t0 inner join ( select max(secren) maxren, poliza, gestor,cia,vigi, vigf, contratante, cliente, status
- from poliza where tipo ='poliza'  group by poliza,gestor,cia,vigi, vigf,contratante,cliente, status) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
+ SELECT  [ramo], t0.[poliza], t1.vigi, t1.vigf, t3.nombre, t6.cat_descr_catalogo as color, t2.gst_nombre, t4.nombre as contratante, [motor], [chasis], t5.descr_marca as marca, [placa], [solicitud], [secart], Year(aaauto) as modelo, [valorauto], [propietario], t1.status,t1.sumaaseg,t1.tipo,t4.nombre as nombreCliente, t4.apellido as apellidoCliente
+ FROM [autos] t0 inner join ( select max(secren) maxren, poliza, gestor,cia,vigi, vigf, contratante, cliente,sumaaseg, status,tipo
+ from poliza where tipo !='endoso' group by poliza,gestor,cia,vigi, vigf,contratante,cliente,sumaaseg, status,tipo) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
  inner join gestores as t2 on t1.gestor = t2.gst_codigo_gestor
  inner join ciaseg as t3 on t1.cia = t3.cia
  inner join clientes as t4 on t1.cliente = t4.cliente
@@ -16,19 +16,27 @@
 
  
  --luego para la busqueda de las coberturas del automovil especifico
- --creo un procedimiento almacenado con la siguiente estructura
+ --creo una vista con la siguiente estructura
 
-  create procedure crearReclamo
-  @placa varchar(50),
-  @propietario varchar(50)
+ -- create procedure crearReclamo
+ -- @placa varchar(50),
+ -- @propietario varchar(50)
 
+ --as
+ --SELECT DISTINCT t3.descr, t0.placa, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
+ --FROM [autos] t0 inner join ( select max(secren) maxren, poliza,sumaaseg from poliza where tipo ='poliza'  and status <> 'cancelada' and vigf >GETDATE() group by poliza,sumaaseg) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
+ --inner join cobeart t2 on t2.secart = t0.secart and t2.poliza = t1.poliza and t2.secren = t1.maxren 
+ --inner join cobertura t3 on t3.cobertura= t2.cober and t3.ramo = 2 
+
+ -- WHERE (placa like '%' + @placa + '%') OR (propietario like '%' + @propietario + '%') 
+
+
+ create view viewCoberturasAutos
  as
- SELECT DISTINCT t3.descr, t0.placa, t2.limite1, t2.limite2, t2.deducible, t2.prima
- FROM [autos] t0 inner join ( select max(secren) maxren, poliza from poliza where tipo ='poliza'  and status <> 'cancelada' group by poliza) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
+ SELECT DISTINCT t3.descr, t0.placa, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
+ FROM [autos] t0 inner join ( select max(secren) maxren, poliza,sumaaseg from poliza where tipo ='poliza'  and status <> 'cancelada' and vigf >GETDATE() group by poliza,sumaaseg) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
  inner join cobeart t2 on t2.secart = t0.secart and t2.poliza = t1.poliza and t2.secren = t1.maxren 
  inner join cobertura t3 on t3.cobertura= t2.cober and t3.ramo = 2 
-
-  WHERE (placa like '%' + @placa + '%') OR (propietario like '%' + @propietario + '%') 
 
 
 
@@ -42,9 +50,10 @@ create view vistaReclamosDaños
 as
 
 insert into [reclamos].[dbo].[vistaReclamosDaños]
-SELECT t0.poliza, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre,t4.nombre as contratante, t0.cliente, t0.status, t1.apellido, t1.tipo, t1.direccion, t1.nombre AS NombreCliente
-FROM dbo.poliza AS t0 INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente INNER JOIN
-dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
+SELECT t0.poliza, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre,t4.nombre as contratante, t0.cliente, t0.status, t1.apellido, t1.tipo, t1.direccion, t1.nombre AS NombreCliente, t0.sumaaseg
+FROM dbo.poliza AS t0 
+INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente 
+INNER JOIN dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
 INNER JOIN dbo.ciaseg AS t3 ON t0.cia = t3.cia
 INNER JOIN clientes as t4 on t1.cliente = t4.cliente
 INNER JOIN ramos as t5 on t0.ramo = t5.ramo
@@ -74,9 +83,9 @@ create view vistaReclamosMedicos
 as
 insert into [reclamos].[dbo].[vistaReclamosMedicos]
 
- select  t0.ramo, t0.poliza, t0.tipo, t0.clase,t0.asegurado, t2.nombre, t3.gst_nombre,t4.nombre as contratante, t1.vigi, t1.vigf from asegurado as t0 INNER JOIN 
-( select max(secren) maxren, poliza, cia, gestor, vigi, vigf, cliente
- from poliza where ramo in (7,9,123) and tipo ='poliza'  group by poliza,cia,gestor,vigi, vigf, cliente, status) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
+ select  t0.ramo, t0.poliza, t0.tipo, t0.clase,t0.asegurado, t2.nombre, t3.gst_nombre,t4.nombre as contratante, t1.vigi, t1.vigf, t1.status from asegurado as t0 INNER JOIN 
+( select max(secren) maxren, poliza, cia, gestor, vigi, vigf, cliente,status
+ from poliza where ramo in (7,9,123) and tipo ='poliza' group by poliza,cia,gestor,vigi, vigf, cliente, status) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
  inner join ciaseg as t2 on t1.cia = t2.cia
  inner join gestores as t3 on t1.gestor = t3.gst_codigo_gestor 
  inner join clientes as t4 on t1.cliente = t4.cliente
@@ -439,3 +448,77 @@ INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
 INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
 INNER JOIN dbo.usuario ON dbo.usuario.id_cabina = dbo.cabina.id AND dbo.autorizaciones.id_usuario = dbo.usuario.id
 where (fecha_commit between @fechaInicio and @fechaFin) and (autorizaciones.tipo_estado != 'Cerrado')
+
+
+
+
+
+
+
+
+
+
+
+
+
+SELECT
+reclamo_auto.usuario_unity,
+auto_reclamo.poliza,
+auto_reclamo.placa,
+auto_reclamo.marca,
+auto_reclamo.color,
+auto_reclamo.modelo,
+auto_reclamo.chasis,
+auto_reclamo.motor,
+auto_reclamo.propietario,
+auto_reclamo.ejecutivo,
+auto_reclamo.aseguradora,
+auto_reclamo.contratante,
+auto_reclamo.estado_poliza,
+reclamo_auto.boleta,
+reclamo_auto.titular,
+reclamo_auto.hora,
+reclamo_auto.fecha,
+reclamo_auto.ubicacion,
+reclamo_auto.reportante,
+reclamo_auto.piloto,
+reclamo_auto.edad,
+reclamo_auto.telefono,
+reclamo_auto.ajustador,
+reclamo_auto.usuario_unity,
+cabina.nombre as cabina,
+sucursal.nombre as sucursal,
+empresa.nombre as empresa,
+pais.nombre as pais,
+usuario.nombre as usuario
+
+FROM
+dbo.auto_reclamo
+INNER JOIN reclamo_auto ON reclamo_auto.id_auto_reclamo = auto_reclamo.id
+INNER JOIN cabina ON reclamo_auto.id_cabina = cabina.id
+INNER JOIN sucursal ON cabina.id_sucursal = sucursal.id
+INNER JOIN empresa ON sucursal.id_empresa = empresa.id
+INNER JOIN pais ON empresa.id_pais = pais.id
+INNER JOIN usuario ON usuario.id_cabina = cabina.id AND reclamo_auto.id_usuario = usuario.id
+
+
+
+---- buscar clientes por poliza o nombre vista para el celular
+
+create View vistaBusquedaPolizaMovil
+as
+SELECT t0.tipo as tipoPol, t0.poliza,t0.ramo as NumRamo, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre as aseguradora,t4.nombre as contratante, t0.cliente, t0.status, t1.nombre + ' '+ t1.apellido as NombreCliente,  t1.tipo, t1.direccion, t0.sumaaseg
+FROM dbo.poliza AS t0 INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente INNER JOIN
+dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
+INNER JOIN dbo.ciaseg AS t3 ON t0.cia = t3.cia
+INNER JOIN clientes as t4 on t1.cliente = t4.cliente
+INNER JOIN ramos as t5 on t0.ramo = t5.ramo
+WHERE(t0.tipo = 'POLIZA') OR (t0.tipo like '%' +'Solici'+ '%')
+
+--coberturas para autos 
+ SELECT DISTINCT t3.descr, t0.placa,t0.chasis,t0.motor,t6.cat_descr_catalogo as color, t5.descr_marca as marca,Year(aaauto) as modelo, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
+ FROM [autos] t0 inner join ( select max(secren) maxren, poliza,sumaaseg from poliza where tipo ='poliza'  and status <> 'cancelada' and vigf >GETDATE() group by poliza,sumaaseg) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
+ inner join cobeart t2 on t2.secart = t0.secart and t2.poliza = t1.poliza and t2.secren = t1.maxren 
+ inner join cobertura t3 on t3.cobertura= t2.cober and t3.ramo = 2
+ inner join seg_marcas as t5 on t0.marca = t5.marca
+ inner join (select cat_descr_catalogo, cat_cod_catalogo from seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
