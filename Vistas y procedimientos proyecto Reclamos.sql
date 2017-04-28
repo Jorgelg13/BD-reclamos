@@ -14,22 +14,6 @@
  inner join seg_marcas as t5 on t0.marca = t5.marca
  inner join (select cat_descr_catalogo, cat_cod_catalogo from seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
 
- 
- --luego para la busqueda de las coberturas del automovil especifico
- --creo una vista con la siguiente estructura
-
- -- create procedure crearReclamo
- -- @placa varchar(50),
- -- @propietario varchar(50)
-
- --as
- --SELECT DISTINCT t3.descr, t0.placa, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
- --FROM [autos] t0 inner join ( select max(secren) maxren, poliza,sumaaseg from poliza where tipo ='poliza'  and status <> 'cancelada' and vigf >GETDATE() group by poliza,sumaaseg) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
- --inner join cobeart t2 on t2.secart = t0.secart and t2.poliza = t1.poliza and t2.secren = t1.maxren 
- --inner join cobertura t3 on t3.cobertura= t2.cober and t3.ramo = 2 
-
- -- WHERE (placa like '%' + @placa + '%') OR (propietario like '%' + @propietario + '%') 
-
 
  create view viewCoberturasAutos
  as
@@ -50,7 +34,7 @@ create view vistaReclamosDaños
 as
 
 insert into [reclamos].[dbo].[vistaReclamosDaños]
-SELECT t0.poliza, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre,t4.nombre as contratante, t0.cliente, t0.status, t1.apellido, t1.tipo, t1.direccion, t1.nombre AS NombreCliente, t0.sumaaseg
+SELECT t0.poliza, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre,t4.nombre as contratante, t0.cliente, t0.status, t1.tipo, t1.direccion, t1.nombre + ' ' + t1.apellido as asegurado, t0.sumaaseg
 FROM dbo.poliza AS t0 
 INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente 
 INNER JOIN dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
@@ -73,6 +57,7 @@ GROUP BY poliza) AS t1 ON t0.poliza = t1.poliza AND t0.secren = t1.m AND t0.tipo
 dbo.ramos AS t2 ON t0.ramo = t2.ramo INNER JOIN
 dbo.cobeart AS t3 ON t2.ramo = t3.ramo AND t0.secren = t3.secren AND t0.poliza = t3.poliza INNER JOIN
 dbo.cobertura AS t4 ON t4.cobertura = t3.cober AND t2.ramo = t4.ramo
+
 
 
 ----------------------------------------------------------------------------------------------------------
@@ -99,6 +84,19 @@ create procedure pa_ReportesAutos
 as
 SELECT
 dbo.reclamo_auto.id,
+dbo.auto_reclamo.poliza,
+dbo.auto_reclamo.asegurado,
+dbo.auto_reclamo.placa,
+dbo.auto_reclamo.chasis,
+dbo.auto_reclamo.motor,
+dbo.auto_reclamo.marca,
+dbo.auto_reclamo.modelo,
+dbo.auto_reclamo.color,
+dbo.auto_reclamo.propietario,
+dbo.auto_reclamo.ejecutivo,
+dbo.auto_reclamo.aseguradora,
+dbo.auto_reclamo.contratante,
+dbo.auto_reclamo.estado_poliza,
 dbo.reclamo_auto.boleta,
 dbo.reclamo_auto.titular,
 dbo.reclamo_auto.ubicacion,
@@ -106,25 +104,21 @@ dbo.reclamo_auto.hora,
 dbo.reclamo_auto.fecha,
 dbo.reclamo_auto.reportante,
 dbo.reclamo_auto.piloto,
+dbo.reclamo_auto.edad,
 dbo.reclamo_auto.telefono,
 dbo.reclamo_auto.ajustador,
 dbo.reclamo_auto.version,
-dbo.reclamo_auto.metodo,
-dbo.reclamo_auto.id_estado,
-dbo.auto_reclamo.poliza,
-dbo.auto_reclamo.placa,
-dbo.auto_reclamo.propietario,
-dbo.auto_reclamo.ejecutivo,
-dbo.auto_reclamo.aseguradora,
-dbo.auto_reclamo.color,
-dbo.auto_reclamo.chasis,
-dbo.auto_reclamo.motor,
-dbo.auto_reclamo.marca,
-dbo.cabina.nombre as Cabina,
-dbo.sucursal.nombre as Sucursal,
-dbo.empresa.nombre as Empresa,
-dbo.pais.nombre as Pais,
-dbo.usuario.nombre as Usuario
+dbo.reclamo_auto.hora_commit,
+dbo.reclamo_auto.fecha_commit,
+dbo.reclamo_auto.estado_unity,
+dbo.reclamo_auto.usuario_unity,
+dbo.reclamo_auto.fecha_cierre,
+dbo.reclamo_auto.hora_cierre,
+dbo.cabina.nombre as cabina,
+dbo.sucursal.nombre as sucursal,
+dbo.empresa.nombre as empresa,
+dbo.pais.nombre as pais,
+dbo.usuario.nombre as usuario
 
 FROM
 dbo.auto_reclamo
@@ -133,9 +127,8 @@ INNER JOIN dbo.cabina ON dbo.reclamo_auto.id_cabina = dbo.cabina.id
 INNER JOIN dbo.sucursal ON dbo.cabina.id_sucursal = dbo.sucursal.id
 INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
 INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
-INNER JOIN dbo.usuario ON dbo.reclamo_auto.id_usuario = dbo.usuario.id AND dbo.cabina.id = dbo.usuario.id_cabina
-
-where (fecha between @fechaInicio and @fechaFin ) and (reclamo_auto.id_estado = 2)
+INNER JOIN dbo.usuario ON dbo.usuario.id_cabina = dbo.cabina.id AND dbo.reclamo_auto.id_usuario = dbo.usuario.id
+where (fecha_cierre between @fechaInicio and @fechaFin ) and (reclamo_auto.id_estado = 2)
 
 
 ----------------------------------------------------------------
@@ -207,8 +200,7 @@ dbo.reclamos_varios.fecha_commit,
 dbo.reclamos_varios.hora_commit,
 dbo.reclamos_varios.id_estado,
 dbo.reg_reclamo_varios.poliza,
-dbo.reg_reclamo_varios.nombre,
-dbo.reg_reclamo_varios.apellido,
+dbo.reg_reclamo_varios.asegurado,
 dbo.reg_reclamo_varios.cliente,
 dbo.reg_reclamo_varios.status,
 dbo.reg_reclamo_varios.tipo,
@@ -365,46 +357,7 @@ where (fecha_commit between @fechaInicio and @fechaFin) and (reclamos_medicos.id
 
 
 
-------------------------------------------------------------
----------------Procedimiento autorizaciones------------------
-create procedure pa_reportesAutorizaciones
-@fechaInicio date,
-@fechaFin date
-as
-SELECT
-dbo.autorizaciones.reportante,
-dbo.autorizaciones.id,
-dbo.autorizaciones.tipo_consulta,
-dbo.autorizaciones.tipo_estado,
-dbo.autorizaciones.correo,
-dbo.autorizaciones.telefono,
-dbo.autorizaciones.metodo,
-dbo.autorizaciones.hora_commit,
-dbo.autorizaciones.fecha_commit,
-dbo.autorizaciones.tipo_estado,
-dbo.reg_reclamos_medicos.asegurado,
-dbo.reg_reclamos_medicos.poliza,
-dbo.reg_reclamos_medicos.ramo,
-dbo.reg_reclamos_medicos.tipo,
-dbo.reg_reclamos_medicos.clase,
-dbo.reg_reclamos_medicos.ejecutivo,
-dbo.reg_reclamos_medicos.aseguradora,
-dbo.reg_reclamos_medicos.contratante,
-dbo.cabina.nombre as cabina,
-dbo.sucursal.nombre as sucursal,
-dbo.empresa.nombre as empresa,
-dbo.pais.nombre as pais,
-dbo.usuario.nombre as nombre
 
-FROM
-dbo.autorizaciones
-INNER JOIN dbo.reg_reclamos_medicos ON dbo.autorizaciones.id_reg_reclamos_medicos = dbo.reg_reclamos_medicos.id
-INNER JOIN dbo.cabina ON dbo.autorizaciones.id_cabina = dbo.cabina.id
-INNER JOIN dbo.sucursal ON dbo.cabina.id_sucursal = dbo.sucursal.id
-INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
-INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
-INNER JOIN dbo.usuario ON dbo.usuario.id_cabina = dbo.cabina.id AND dbo.autorizaciones.id_usuario = dbo.usuario.id
-where (fecha_commit between @fechaInicio and @fechaFin) and (autorizaciones.tipo_estado = 'Cerrado')
 
 
 
@@ -513,7 +466,6 @@ dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
 INNER JOIN dbo.ciaseg AS t3 ON t0.cia = t3.cia
 INNER JOIN clientes as t4 on t1.cliente = t4.cliente
 INNER JOIN ramos as t5 on t0.ramo = t5.ramo
-
 WHERE(t0.tipo = 'POLIZA') OR (t0.tipo like '%' +'Solici'+ '%')
 
 --coberturas para autos
@@ -538,4 +490,14 @@ as
  inner join clientes as t4 on t1.cliente = t4.cliente
 
 
- select top(2000)*from poliza where ramo in(7,9,123)
+
+declare @horaActualTime as time
+declare @horaActualDateTime as datetime
+declare @fecha2 as time
+
+set @horaActualDateTime = GETDATE()
+set @horaActualTime = @horaActualDateTime
+set @fecha2 = '11:01:00'
+
+--convirtiendo tu fecha en datetime
+select CAST( @fecha2 as datetime ),DATEDIFF( MI , @fecha2 , @horaActualDateTime )  as diferenciaDatetime, DATEDIFF( MI , @fecha2 , @horaActualTime )  as diferenciaTime
