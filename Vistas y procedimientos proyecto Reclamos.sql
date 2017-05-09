@@ -21,7 +21,7 @@ truncate table vistaReclamosMedicos
 
  create view viewCoberturasAutos
  as
- SELECT DISTINCT t3.descr, t0.placa, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
+ SELECT DISTINCT t3.descr, t0.placa,t0.chasis, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
  FROM [autos] t0 inner join ( select max(secren) maxren, poliza,sumaaseg from poliza where tipo ='poliza'  and status <> 'cancelada' and vigf >GETDATE() group by poliza,sumaaseg) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
  inner join cobeart t2 on t2.secart = t0.secart and t2.poliza = t1.poliza and t2.secren = t1.maxren 
  inner join cobertura t3 on t3.cobertura= t2.cober and t3.ramo = 2 
@@ -67,7 +67,7 @@ dbo.cobertura AS t4 ON t4.cobertura = t3.cober AND t2.ramo = t4.ramo
 
 insert into [reclamos].[dbo].[vistaReclamosMedicos]
 
- select t0.ramo, t0.poliza, t0.tipo, t0.clase,t0.asegurado, t2.nombre, t3.gst_nombre,t4.nombre as contratante, t1.vigi, t1.vigf, t1.status, maxren from asegurado as t0 INNER JOIN 
+ select t0.ramo, t0.poliza, t0.tipo, t0.clase,LOWER(t0.asegurado), t2.nombre, t3.gst_nombre,t4.nombre as contratante, t1.vigi, t1.vigf, t1.status, maxren from asegurado as t0 INNER JOIN 
 ( select max(secren) maxren, poliza, cia, gestor, vigi, vigf, cliente,status
  from poliza where ramo in (7,9,123) and tipo ='poliza' group by poliza,cia,gestor,vigi, vigf, cliente, status) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
  inner join ciaseg as t2 on t1.cia = t2.cia
@@ -78,51 +78,8 @@ insert into [reclamos].[dbo].[vistaReclamosMedicos]
 
 
 
-----------------------------------------------------------------
--------------procedimientos almacenados para reportes de reclamos no cerrados -------------------
-create procedure pa_ReportesAutosPendientes
-@fechaInicio date,
-@fechaFin date
-as
-SELECT
-dbo.reclamo_auto.id,
-dbo.reclamo_auto.boleta,
-dbo.reclamo_auto.titular,
-dbo.reclamo_auto.ubicacion,
-dbo.reclamo_auto.hora,
-dbo.reclamo_auto.fecha,
-dbo.reclamo_auto.reportante,
-dbo.reclamo_auto.piloto,
-dbo.reclamo_auto.telefono,
-dbo.reclamo_auto.ajustador,
-dbo.reclamo_auto.version,
-dbo.reclamo_auto.metodo,
-dbo.reclamo_auto.id_estado,
-dbo.auto_reclamo.poliza,
-dbo.auto_reclamo.placa,
-dbo.auto_reclamo.propietario,
-dbo.auto_reclamo.ejecutivo,
-dbo.auto_reclamo.aseguradora,
-dbo.auto_reclamo.color,
-dbo.auto_reclamo.chasis,
-dbo.auto_reclamo.motor,
-dbo.auto_reclamo.marca,
-dbo.cabina.nombre as Cabina,
-dbo.sucursal.nombre as Sucursal,
-dbo.empresa.nombre as Empresa,
-dbo.pais.nombre as Pais,
-dbo.usuario.nombre as Usuario
 
-FROM
-dbo.auto_reclamo
-INNER JOIN dbo.reclamo_auto ON dbo.reclamo_auto.id_auto_reclamo = dbo.auto_reclamo.id
-INNER JOIN dbo.cabina ON dbo.reclamo_auto.id_cabina = dbo.cabina.id
-INNER JOIN dbo.sucursal ON dbo.cabina.id_sucursal = dbo.sucursal.id
-INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
-INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
-INNER JOIN dbo.usuario ON dbo.reclamo_auto.id_usuario = dbo.usuario.id AND dbo.cabina.id = dbo.usuario.id_cabina
 
-where (fecha between @fechaInicio and @fechaFin ) and (reclamo_auto.id_estado = 1)
 
 
 
