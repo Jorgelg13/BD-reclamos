@@ -30,10 +30,13 @@ dbo.reclamo_auto.edad,
 dbo.reclamo_auto.telefono,
 dbo.reclamo_auto.ajustador,
 dbo.reclamo_auto.version,
+dbo.reclamo_auto.tipo_servicio,
 dbo.reclamo_auto.hora_commit,
 dbo.reclamo_auto.fecha_commit,
 dbo.reclamo_auto.hora_cierre,
 dbo.reclamo_auto.fecha_cierre,
+dbo.reclamo_auto.usuario_unity,
+dbo.reclamo_auto.estado_unity,
 dbo.cabina.nombre as cabina,
 dbo.sucursal.nombre as sucursal,
 dbo.empresa.nombre as empresa,
@@ -47,7 +50,7 @@ INNER JOIN dbo.cabina ON dbo.reclamo_auto.id_cabina = dbo.cabina.id
 INNER JOIN dbo.sucursal ON dbo.cabina.id_sucursal = dbo.sucursal.id
 INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
 INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
-INNER JOIN dbo.usuario ON dbo.usuario.id_cabina = dbo.cabina.id AND dbo.reclamo_auto.id_usuario = dbo.usuario.id
+INNER JOIN dbo.usuario ON dbo.reclamo_auto.id_usuario = dbo.usuario.id
 where (fecha_cierre between @fechaInicio and @fechaFin ) and (reclamo_auto.id_estado = 2)
 
 
@@ -96,7 +99,7 @@ INNER JOIN dbo.cabina ON dbo.reclamos_varios.id_cabina = dbo.cabina.id
 INNER JOIN dbo.sucursal ON dbo.cabina.id_sucursal = dbo.sucursal.id
 INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
 INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
-INNER JOIN dbo.usuario ON dbo.usuario.id_cabina = dbo.cabina.id AND dbo.reclamos_varios.id_usuario = dbo.usuario.id
+INNER JOIN dbo.usuario ON dbo.reclamos_varios.id_usuario = dbo.usuario.id
 where (fecha_cierre between @fechaInicio and @fechaFin) and (reclamos_varios.id_estado = 2)
 
 
@@ -140,7 +143,7 @@ INNER JOIN dbo.cabina ON dbo.reclamos_medicos.id_cabina = dbo.cabina.id
 INNER JOIN dbo.sucursal ON dbo.cabina.id_sucursal = dbo.sucursal.id
 INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
 INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
-INNER JOIN dbo.usuario ON dbo.usuario.id_cabina = dbo.cabina.id AND dbo.reclamos_medicos.id_usuario = dbo.usuario.id
+INNER JOIN dbo.usuario ON dbo.reclamos_medicos.id_usuario = dbo.usuario.id
 where (fecha_cierre between @fechaInicio and @fechaFin) and (reclamos_medicos.id_estado = 2)
 
 
@@ -187,8 +190,8 @@ INNER JOIN dbo.cabina ON dbo.autorizaciones.id_cabina = dbo.cabina.id
 INNER JOIN dbo.sucursal ON dbo.cabina.id_sucursal = dbo.sucursal.id
 INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
 INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
-INNER JOIN dbo.usuario ON dbo.usuario.id_cabina = dbo.cabina.id AND dbo.autorizaciones.id_usuario = dbo.usuario.id
-where (fecha_cierre between @fechaInicio and @fechaFin) and (autorizaciones.tipo_estado = 'Cerrado')
+INNER JOIN dbo.usuario ON dbo.autorizaciones.id_usuario = dbo.usuario.id
+where (fecha_commit between @fechaInicio and @fechaFin)
 
 
 
@@ -230,5 +233,5 @@ INNER JOIN dbo.cabina ON dbo.autorizaciones.id_cabina = dbo.cabina.id
 INNER JOIN dbo.sucursal ON dbo.cabina.id_sucursal = dbo.sucursal.id
 INNER JOIN dbo.empresa ON dbo.sucursal.id_empresa = dbo.empresa.id
 INNER JOIN dbo.pais ON dbo.empresa.id_pais = dbo.pais.id
-INNER JOIN dbo.usuario ON dbo.usuario.id_cabina = dbo.cabina.id AND dbo.autorizaciones.id_usuario = dbo.usuario.id
-where (fecha_commit between @fechaInicio and @fechaFin) and (autorizaciones.tipo_estado != 'Cerrado')
+INNER JOIN dbo.usuario ON dbo.autorizaciones.id_usuario = dbo.usuario.id
+where (autorizaciones.tipo_estado != 'Cerrado')
