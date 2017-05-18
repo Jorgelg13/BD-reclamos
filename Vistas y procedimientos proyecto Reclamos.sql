@@ -95,6 +95,7 @@ insert into [reclamos].[dbo].[vistaReclamosMedicos]
 
 ---- buscar clientes por poliza o nombre vista para el celular
 
+
 create View vistaBusquedaPolizaMovil
 as
 SELECT t0.tipo as tipoPol, t0.poliza,t0.ramo as NumRamo, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre as aseguradora,t4.nombre as contratante, t0.cliente, t0.status, t1.nombre + ' '+ t1.segundo_nombre + ' ' + t1.apellido + ' '+ t1.segundo_apellido as NombreCliente,  t1.tipo, t1.direccion, t0.sumaaseg
@@ -103,7 +104,9 @@ dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
 INNER JOIN dbo.ciaseg AS t3 ON t0.cia = t3.cia
 INNER JOIN clientes as t4 on t1.cliente = t4.cliente
 INNER JOIN ramos as t5 on t0.ramo = t5.ramo
-WHERE(t0.tipo = 'POLIZA') OR (t0.tipo like '%' +'Solici'+ '%')
+WHERE(t0.tipo != 'endoso')
+
+
 
 
 --coberturas para autos
