@@ -97,7 +97,7 @@ insert into [reclamos].[dbo].[vistaReclamosMedicos]
 
 create View vistaBusquedaPolizaMovil
 as
-SELECT t0.tipo as tipoPol, t0.poliza,t0.ramo as NumRamo, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre as aseguradora,t4.nombre as contratante, t0.cliente, t0.status, t1.nombre + ' '+ t1.apellido as NombreCliente,  t1.tipo, t1.direccion, t0.sumaaseg
+SELECT t0.tipo as tipoPol, t0.poliza,t0.ramo as NumRamo, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre as aseguradora,t4.nombre as contratante, t0.cliente, t0.status, t1.nombre + ' '+ t1.segundo_nombre + ' ' + t1.apellido + ' '+ t1.segundo_apellido as NombreCliente,  t1.tipo, t1.direccion, t0.sumaaseg
 FROM dbo.poliza AS t0 INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente INNER JOIN
 dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
 INNER JOIN dbo.ciaseg AS t3 ON t0.cia = t3.cia
@@ -109,13 +109,12 @@ WHERE(t0.tipo = 'POLIZA') OR (t0.tipo like '%' +'Solici'+ '%')
 --coberturas para autos
 create view vistaBusquedaMovilCoberturaAuto 
 as
- SELECT DISTINCT t3.descr,t0.poliza, t0.placa,t0.chasis,t0.motor,t6.cat_descr_catalogo as color, t5.descr_marca as marca,Year(aaauto) as modelo, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
- FROM [autos] t0 inner join ( select max(secren) maxren, poliza,sumaaseg from poliza where tipo ='poliza'  and status <> 'cancelada' and vigf >GETDATE() group by poliza,sumaaseg) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
- inner join cobeart t2 on t2.secart = t0.secart and t2.poliza = t1.poliza and t2.secren = t1.maxren 
- inner join cobertura t3 on t3.cobertura= t2.cober and t3.ramo = 2
- inner join seg_marcas as t5 on t0.marca = t5.marca
- inner join (select cat_descr_catalogo, cat_cod_catalogo from seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
- where (t0.poliza = '91-0033551#117')
+SELECT DISTINCT t3.descr,t0.poliza, t0.placa,t0.chasis,t0.motor,t6.cat_descr_catalogo as color, t5.descr_marca as marca,Year(aaauto) as modelo, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
+FROM [autos] t0 inner join ( select max(secren) maxren, poliza,sumaaseg from poliza where  tipo !='poliza'  and status <> 'cancelada' group by poliza,sumaaseg) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
+inner join cobeart t2 on t2.secart = t0.secart and t2.poliza = t1.poliza and t2.secren = t1.maxren 
+inner join cobertura t3 on t3.cobertura= t2.cober and t3.ramo = 2
+inner join seg_marcas as t5 on t0.marca = t5.marca
+inner join (select cat_descr_catalogo, cat_cod_catalogo from seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
 
 
 
