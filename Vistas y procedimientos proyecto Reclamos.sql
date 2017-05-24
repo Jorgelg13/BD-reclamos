@@ -70,11 +70,11 @@ dbo.cobertura AS t4 ON t4.cobertura = t3.cober AND t2.ramo = t4.ramo
 
 
 ----------------------------------------------------------------------------------------------------------
------ query para busqueda de las polizas medicas------------------------
+--------------------------------------- query para busqueda de las polizas medicas------------------------
 
 insert into [reclamos].[dbo].[vistaReclamosMedicos]
 
- select t0.ramo, t0.poliza, t0.tipo, t0.clase,LOWER(t0.asegurado), t2.nombre, t3.gst_nombre,t4.nombre as contratante, t1.vigi, t1.vigf, t1.status, maxren,t4.vip,t1.gestor from asegurado as t0 INNER JOIN 
+ select t0.ramo, t0.poliza, t0.tipo, t0.clase,LOWER(t0.asegurado), t2.nombre, t3.gst_nombre,t4.nombre as contratante, t1.vigi, t1.vigf, t1.status, maxren,t4.vip,t1.gestor, t0.secren from asegurado as t0 INNER JOIN 
 ( select max(secren) maxren, poliza, cia, gestor, vigi, vigf, cliente,status
  from poliza where ramo in (7,9,123) and tipo ='poliza' group by poliza,cia,gestor,vigi, vigf, cliente, status) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
  inner join ciaseg as t2 on t1.cia = t2.cia
@@ -92,40 +92,29 @@ insert into [reclamos].[dbo].[vistaReclamosMedicos]
 
 
 
-
----- buscar clientes por poliza o nombre vista para el celular
-
+-----------------------------------------------------------------------------------
+---------- buscar clientes por poliza o nombre vista para el celular  -------------
 
 create View vistaBusquedaPolizaMovil
 as
 SELECT t0.tipo as tipoPol, t0.poliza,t0.ramo as NumRamo, t5.descr as ramo, t0.vigi, t0.vigf, t2.gst_nombre, t3.nombre as aseguradora,t4.nombre as contratante, t0.cliente, t0.status, t1.nombre + ' '+ t1.segundo_nombre + ' ' + t1.apellido + ' '+ t1.segundo_apellido as NombreCliente,  t1.tipo, t1.direccion, t0.sumaaseg
-FROM dbo.poliza AS t0 INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente INNER JOIN
-dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
+FROM dbo.poliza  AS t0
+INNER JOIN dbo.clientes AS t1 ON t1.cliente = t0.cliente 
+INNER JOIN dbo.gestores AS t2 ON t0.gestor = t2.gst_codigo_gestor
 INNER JOIN dbo.ciaseg AS t3 ON t0.cia = t3.cia
 INNER JOIN clientes as t4 on t1.cliente = t4.cliente
 INNER JOIN ramos as t5 on t0.ramo = t5.ramo
 WHERE(t0.tipo != 'endoso')
 
 
+--------------------------------------------------------------------------------------------
+--------------busqueda de poliza de vida individual y gastos medicos------------------------
 
-
---coberturas para autos
-create view vistaBusquedaMovilCoberturaAuto 
-as
-SELECT DISTINCT t3.descr,t0.poliza, t0.placa,t0.chasis,t0.motor,t6.cat_descr_catalogo as color, t5.descr_marca as marca,Year(aaauto) as modelo, t2.limite1, t2.limite2, t2.deducible, t2.prima,t1.sumaaseg
-FROM [autos] t0 inner join ( select max(secren) maxren, poliza,sumaaseg from poliza where  tipo !='poliza'  and status <> 'cancelada' group by poliza,sumaaseg) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
-inner join cobeart t2 on t2.secart = t0.secart and t2.poliza = t1.poliza and t2.secren = t1.maxren 
-inner join cobertura t3 on t3.cobertura= t2.cober and t3.ramo = 2
-inner join seg_marcas as t5 on t0.marca = t5.marca
-inner join (select cat_descr_catalogo, cat_cod_catalogo from seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
-
-
-
----buscar coberturas de polizas medicas
- select maxren, t0.ramo, t0.poliza, t0.tipo, t0.clase,t0.asegurado, t2.nombre, t3.gst_nombre,t4.nombre as contratante, t1.vigi, t1.vigf, t1.status from asegurado as t0 INNER JOIN 
-( select max(secren) maxren, poliza, cia, gestor, vigi, vigf, cliente,status
- from poliza where ramo in (7,9,123) and tipo ='poliza' group by poliza,cia,gestor,vigi, vigf, cliente, status) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
- inner join ciaseg as t2 on t1.cia = t2.cia
- inner join gestores as t3 on t1.gestor = t3.gst_codigo_gestor 
- inner join clientes as t4 on t1.cliente = t4.cliente
-
+ create view vistaVidaIndividual
+ as
+ select t0.poliza, t0.nombre_en_poliza as titular,t1.nombre as aseguradora,t3.gst_nombre,t0.contratante,t0.vigi, t0.vigf,t0.status,t4.descr as ramo, t0.cliente,t2.tipo, t2.nombre +' ' + t2.segundo_nombre + ' ' + t2.apellido + ' ' + t2.segundo_apellido as asesgurado from poliza as t0  
+ inner join ciaseg as t1 on t1.cia = t0.cia
+ inner join clientes as t2 on t0.cliente = t2.cliente
+ inner join gestores as t3 on t0.gestor = t3.gst_codigo_gestor 
+ INNER JOIN ramos as t4 on t0.ramo = t4.ramo
+ where (t0.ramo in (7)) and (t0.tipo != 'endoso')
