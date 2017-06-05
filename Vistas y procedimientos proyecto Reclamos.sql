@@ -118,3 +118,40 @@ WHERE(t0.tipo != 'endoso')
  inner join gestores as t3 on t0.gestor = t3.gst_codigo_gestor 
  INNER JOIN ramos as t4 on t0.ramo = t4.ramo
  where (t0.ramo in (7)) and (t0.tipo != 'endoso')
+
+
+
+
+
+ namespace ConsoleApp1
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            string dato = "Jor               Anto Gue";
+            string[] arreglo = dato.Split(" ".ToCharArray());
+            string sql = "";
+            if (arreglo.Length > 0)
+            {
+                sql = " Where nombre like '%" + arreglo[0] + "%' ";
+
+                if (arreglo.Length > 1)
+                {
+                    for (int i = 1; i < arreglo.Length; i++)
+                    {
+                        if (!String.IsNullOrEmpty(arreglo[i].Trim()))
+                        {
+                            sql += " OR nombre like '%" + arreglo[i] + "%' ";
+
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine(sql);
+            Console.ReadKey();
+        }
+
+    }
+}
