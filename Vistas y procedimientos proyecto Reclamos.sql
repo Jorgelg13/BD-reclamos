@@ -8,7 +8,7 @@ BEGIN TRY
 			 [ramo],
 			t0.[poliza],
 			t1.vigi,
-			t1.vigf,
+		    't1.vigf',
 			t3.nombre,
 			t6.cat_descr_catalogo as color,
 			t2.gst_nombre,
@@ -29,7 +29,7 @@ BEGIN TRY
 			t4.vip,
 			t1.gestor,
 			t0.inciso_cia,
-			 t7.mnd_moneda,
+			t7.mnd_moneda,
 			t4.direccion
 			FROM [192.168.5.205].seguro.dbo.autos t0
 			inner join (
@@ -38,7 +38,7 @@ BEGIN TRY
 			inner join [192.168.5.205].seguro.dbo.gestores as t2 on t1.gestor = t2.gst_codigo_gestor
 			inner join [192.168.5.205].seguro.dbo.ciaseg as t3 on t1.cia = t3.cia
 			inner join [192.168.5.205].seguro.dbo.clientes as t4 on t1.cliente = t4.cliente
-			inner join [192.168.5.205].seguro.dbo.seg_marcas as t5 on  REPLACE(t0.marca, '|', '') = t5.marca
+			inner join [192.168.5.205].seguro.dbo.seg_marcas as t5 on  t0.marca = t5.marca
 			left join [192.168.5.205].seguro.dbo.seg_monedas as t7 on t1.moneda_facturacion = t7.mnd_id
 			inner join (select cat_descr_catalogo, cat_cod_catalogo from [192.168.5.205].seguro.dbo.seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
 
@@ -49,6 +49,7 @@ BEGIN TRY
 	  END TRY
 	BEGIN CATCH
 		ROLLBACK 
+		insert into errores_insercion(numero, descripcion,seccion)values(ERROR_NUMBER(),ERROR_MESSAGE(),'Autos')
 		SELECT 
         ERROR_NUMBER() AS ErrorNumber,
         ERROR_MESSAGE() AS ErrorMessage;
@@ -94,8 +95,8 @@ BEGIN TRY
        COMMIT
      END TRY
 BEGIN CATCH
-    ROLLBACK
-	SELECT 
+        INSERT INTO errores_insercion(numero, descripcion,seccion)values(ERROR_NUMBER(),ERROR_MESSAGE(),'Daños')
+		SELECT 
         ERROR_NUMBER() AS ErrorNumber,
         ERROR_MESSAGE() AS ErrorMessage;
 END CATCH
@@ -141,7 +142,8 @@ BEGIN TRY
    END TRY
 BEGIN CATCH
     ROLLBACK
-	SELECT 
+	INSERT INTO errores_insercion(numero, descripcion,seccion)values(ERROR_NUMBER(),ERROR_MESSAGE(),'Medicos')
+		SELECT 
         ERROR_NUMBER() AS ErrorNumber,
         ERROR_MESSAGE() AS ErrorMessage;
 END CATCH
@@ -182,7 +184,8 @@ BEGIN TRY
     END TRY
 BEGIN CATCH
     ROLLBACK
-    SELECT 
+    INSERT INTO errores_insercion(numero, descripcion,seccion)values(ERROR_NUMBER(),ERROR_MESSAGE(),'Busqueda Movil')
+		SELECT 
         ERROR_NUMBER() AS ErrorNumber,
         ERROR_MESSAGE() AS ErrorMessage;
 END CATCH
