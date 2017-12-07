@@ -32,7 +32,8 @@ BEGIN TRY
 			t7.mnd_moneda,
 			t4.direccion,
 		    t1.cia,
-			t1.secren
+			t1.secren,
+			t1.cliente
 			FROM [192.168.5.205].seguro.dbo.autos t0
 			inner join (
 			select max(secren) maxren, poliza, gestor,cia,vigi, vigf, contratante, cliente,sumaaseg, status,tipo,moneda_facturacion,secren
@@ -132,11 +133,12 @@ BEGIN TRY
 			 t1.gestor, 
 			 t0.secren,
 			 t5.mnd_moneda,
-			 t0.certificado
+			 t0.certificado,
+			 t1.cliente
 			 from [192.168.5.205].[seguro].[dbo].[asegurado] as t0 
 			 INNER JOIN 
 			 (select max(secren) maxren, poliza, cia, gestor, vigi, vigf, cliente,status, moneda_facturacion
-			 from [192.168.5.205].[seguro].[dbo].[poliza] where ramo in (7,9,123) and tipo ='poliza' and status != 'Cancelada' and vigi > '2016/01/01' group by poliza,cia,gestor,vigi, vigf, cliente, status, moneda_facturacion) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
+			 from [192.168.5.205].[seguro].[dbo].[poliza] where ramo in (7,9,123) and tipo ='poliza' and status != 'Cancelada' and YEAR(vigf) >= YEAR('2017') group by poliza,cia,gestor,vigi, vigf, cliente, status, moneda_facturacion) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
 			 INNER JOIN [192.168.5.205].[seguro].[dbo].[ciaseg] as t2 on t1.cia = t2.cia
 			 INNER JOIN [192.168.5.205].[seguro].[dbo].[gestores] as t3 on t1.gestor = t3.gst_codigo_gestor 
 			 INNER JOIN [192.168.5.205].[seguro].[dbo].[clientes] as t4 on t1.cliente = t4.cliente
