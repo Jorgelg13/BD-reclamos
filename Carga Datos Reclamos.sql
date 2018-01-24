@@ -1,4 +1,4 @@
-BEGIN TRY
+BEGIN TRY  --61831
     BEGIN TRANSACTION
       truncate table ViewBusquedaAuto
 		    --Primero crear una vista con el query que se usara para la busqueda de los datos
@@ -33,17 +33,19 @@ BEGIN TRY
 			t4.direccion,
 		    t1.cia,
 			t1.secren,
-			t1.cliente
+			t1.cliente,
+			t1.programa
 			FROM [192.168.5.205].seguro.dbo.autos t0
 			inner join (
-			select max(secren) maxren, poliza, gestor,cia,vigi, vigf, contratante, cliente,sumaaseg, status,tipo,moneda_facturacion,secren
-			from [192.168.5.205].seguro.dbo.poliza where tipo !='endoso' group by poliza,gestor,cia,vigi, vigf,contratante,cliente,sumaaseg, status,tipo,moneda_facturacion, secren) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
+			select max(secren) maxren, poliza, gestor,cia,vigi, vigf, contratante, cliente,sumaaseg, status,tipo,moneda_facturacion,secren, programa
+			from [192.168.5.205].seguro.dbo.poliza where tipo !='endoso' and YEAR(vigf) >= '2017' and status != 'Cancelada' group by poliza,gestor,cia,vigi, vigf,contratante,cliente,sumaaseg, status,tipo,moneda_facturacion, secren, programa) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
 			inner join [192.168.5.205].seguro.dbo.gestores as t2 on t1.gestor = t2.gst_codigo_gestor
 			inner join [192.168.5.205].seguro.dbo.ciaseg as t3 on t1.cia = t3.cia
 			inner join [192.168.5.205].seguro.dbo.clientes as t4 on t1.cliente = t4.cliente
 			inner join [192.168.5.205].seguro.dbo.seg_marcas as t5 on  t0.marca = t5.marca
 			left join [192.168.5.205].seguro.dbo.seg_monedas as t7 on t1.moneda_facturacion = t7.mnd_id
 			inner join (select cat_descr_catalogo, cat_cod_catalogo from [192.168.5.205].seguro.dbo.seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
+			
 			 --ejecutar update en base de datos reclamos para actualizar el campo vip
 			 use reclamos
 			 update ViewBusquedaAuto SET vip= 'Si' where (numero_gestor = 138 or numero_gestor = 440) 

@@ -87,7 +87,7 @@ select CONVERT(int,ROW_NUMBER() OVER(ORDER BY poliza ASC))+ @sec as secuencia,
 				from reclamos.dbo.reclamos_medicos as rm
 				inner join reg_reclamos_medicos as reg on rm.id_reg_reclamos_medicos = reg.id 
 				left join detalle_pagos_reclamos_medicos as pm on pm.id_reclamo_medico = rm.id
-				where (rm.estado_unity = 'Cerrado') and rm.acs = 0
+				where (rm.estado_unity = 'Cerrado') and rm.acs = 0 and reg.secren != '' 
 				
 				insert into [192.168.5.205].[seguro].[dbo].[reclamosvida] (secuencia,ramo,poliza,secren,reclamo, certificado, 
 				montodeducible,montopagado,descripcion, fechareg, fechacierre,fecharevision, usuario, detallecliente, 
@@ -95,7 +95,9 @@ select CONVERT(int,ROW_NUMBER() OVER(ORDER BY poliza ASC))+ @sec as secuencia,
 				select *from #TEMP2 
 				update reclamos_medicos set acs = 1 where acs = 0
 
+				select *from #TEMP2
 
+				drop table #TEMP2
 
 
 
