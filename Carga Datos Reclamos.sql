@@ -38,14 +38,13 @@ BEGIN TRY  --61831
 			FROM [192.168.5.205].seguro.dbo.autos t0
 			inner join (
 			select max(secren) maxren, poliza, gestor,cia,vigi, vigf, contratante, cliente,sumaaseg, status,tipo,moneda_facturacion,secren, programa
-			from [192.168.5.205].seguro.dbo.poliza where tipo !='endoso' and YEAR(vigf) >= '2017' and status != 'Cancelada' group by poliza,gestor,cia,vigi, vigf,contratante,cliente,sumaaseg, status,tipo,moneda_facturacion, secren, programa) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
+			from [192.168.5.205].seguro.dbo.poliza where tipo ='poliza' and YEAR(vigf) >= '2018' and status != 'Cancelada' group by poliza,gestor,cia,vigi, vigf,contratante,cliente,sumaaseg, status,tipo,moneda_facturacion, secren, programa) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren
 			inner join [192.168.5.205].seguro.dbo.gestores as t2 on t1.gestor = t2.gst_codigo_gestor
 			inner join [192.168.5.205].seguro.dbo.ciaseg as t3 on t1.cia = t3.cia
 			inner join [192.168.5.205].seguro.dbo.clientes as t4 on t1.cliente = t4.cliente
 			inner join [192.168.5.205].seguro.dbo.seg_marcas as t5 on  t0.marca = t5.marca
 			left join [192.168.5.205].seguro.dbo.seg_monedas as t7 on t1.moneda_facturacion = t7.mnd_id
-			inner join (select cat_descr_catalogo, cat_cod_catalogo from [192.168.5.205].seguro.dbo.seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
-			
+			left join (select cat_descr_catalogo, cat_cod_catalogo from [192.168.5.205].seguro.dbo.seg_catalogo where tab_cod_tabla = 'seg_color_auto') t6 on t0.color = t6.cat_cod_catalogo
 			 --ejecutar update en base de datos reclamos para actualizar el campo vip
 			 use reclamos
 			 update ViewBusquedaAuto SET vip= 'Si' where (numero_gestor = 138 or numero_gestor = 440) 
@@ -95,7 +94,7 @@ BEGIN TRY
 			INNER JOIN [192.168.5.205].[seguro].[dbo].[clientes] as t4 on t1.cliente = t4.cliente
 			INNER JOIN [192.168.5.205].[seguro].[dbo].[ramos] as t5 on t0.ramo = t5.ramo
 			lEFT JOIN [192.168.5.205].[seguro].[dbo].[seg_monedas] as t6 on t0.moneda_facturacion = t6.mnd_id
-			WHERE (t0.ramo NOT IN (2, 123, 7, 9))  AND (UPPER(t0.status) <> 'SOLICITUD') AND (UPPER(t0.tipo) = 'POLIZA')
+			WHERE (t0.ramo NOT IN (2, 123, 7, 9))  AND (UPPER(t0.status) != 'Cancelada') AND (UPPER(t0.tipo) = 'POLIZA') and year(t0.vigf) >= '2017'
 
 		    --ejecutar update en base de datos reclamos para actualizar el campo vip
 		    use reclamos
@@ -140,7 +139,7 @@ BEGIN TRY
 			 from [192.168.5.205].[seguro].[dbo].[asegurado] as t0 
 			 INNER JOIN 
 			 (select max(secren) maxren, poliza, cia, gestor, vigi, vigf, cliente,status, moneda_facturacion
-			 from [192.168.5.205].[seguro].[dbo].[poliza] where ramo in (7,9,123) and tipo ='poliza' and status != 'Cancelada' and YEAR(vigf) >= YEAR('2017') group by poliza,cia,gestor,vigi, vigf, cliente, status, moneda_facturacion) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
+			 from [192.168.5.205].[seguro].[dbo].[poliza] where ramo in (7,9,123) and tipo ='poliza' and status != 'Cancelada' and YEAR(vigf) >= YEAR('2018') group by poliza,cia,gestor,vigi, vigf, cliente, status, moneda_facturacion) t1 on t0.poliza = t1.poliza and t0.secren = t1.maxren 
 			 INNER JOIN [192.168.5.205].[seguro].[dbo].[ciaseg] as t2 on t1.cia = t2.cia
 			 INNER JOIN [192.168.5.205].[seguro].[dbo].[gestores] as t3 on t1.gestor = t3.gst_codigo_gestor 
 			 INNER JOIN [192.168.5.205].[seguro].[dbo].[clientes] as t4 on t1.cliente = t4.cliente

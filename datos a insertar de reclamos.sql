@@ -61,41 +61,54 @@ select CONVERT(int,ROW_NUMBER() OVER(ORDER BY poliza ASC))+ @sec as secuencia,
 				select *from #TEMP
 			update reclamos_varios set acs = 1 where acs = 0
 
-
-
 --insertar los reclamos de gastos medicos a la bd Seguro
 declare @sec int
-select @sec=max(secuencia) from [192.168.5.205].seguro.dbo.reclamosvida  
+select @sec=max(secuencia) from seguro.dbo.reclamosvida  
 select CONVERT(int,ROW_NUMBER() OVER(ORDER BY poliza ASC))+ @sec as secuencia,  
 				reg.ramo,  
-				reg.poliza, 
-				reg.secren,  
+				reg.poliza,
+				convert(int,reg.secren) as secren,  
 				rm.num_reclamo,
 				reg.certificado,
-				pm.deducible,--
-				pm.total_aprobado,
+				Convert(float,pm.deducible) as deducible,
+				Convert(float,pm.total_aprobado) as total_aprobado,
 				rm.observacion,
 				rm.fecha_commit,
 				rm.fecha_cierre,
 				rm.fecha_apertura, 
 				rm.usuario_unity, 
 				rm.detalle_cliente, 
-				pm.total_no_cubierto, 
+				Convert(float,pm.total_no_cubierto) as total_no_cubierto, 
 				reg.cliente,
 				rm.fecha_envio_cheque
-				into #TEMP2
+				--convert(varchar(4),year(rm.fecha_envio_cheque)) +'-'+ convert(varchar(2),12) +'-'+convert(varchar(2),'01') + ' 00:00:00:000' as fecha_envio_cheque
+				into #temp2
 				from reclamos.dbo.reclamos_medicos as rm
 				inner join reg_reclamos_medicos as reg on rm.id_reg_reclamos_medicos = reg.id 
 				left join detalle_pagos_reclamos_medicos as pm on pm.id_reclamo_medico = rm.id
-				where (rm.estado_unity = 'Cerrado') and rm.acs = 0 and reg.secren != '' 
-				
-				insert into [192.168.5.205].[seguro].[dbo].[reclamosvida] (secuencia,ramo,poliza,secren,reclamo, certificado, 
-				montodeducible,montopagado,descripcion, fechareg, fechacierre,fecharevision, usuario, detallecliente, 
-				montonocubierto, cliente, fechaenviocliente )
-				select *from #TEMP2 
-				update reclamos_medicos set acs = 1 where acs = 0
+				where (rm.estado_unity = 'Cerrado') and (rm.acs = 0) and (rm.metodo= 'Sistema') and rm.fecha_envio_cheque != ''
 
-				select *from #TEMP2
+				insert into [seguro].[dbo].[reclamosvida] 
+				(secuencia,
+				ramo,
+				poliza,
+				secren,
+				reclamo,
+				certificado,
+				montodeducible,
+				montopagado,
+				descripcion,
+				fechareg, 
+				fechacierre,
+				fecharevision, 
+				usuario, 
+				detallecliente, 
+				montonocubierto, 
+				cliente,
+				fechaenviocliente 
+				)
+			   select *from #TEMP2 
+
 
 				drop table #TEMP2
 
